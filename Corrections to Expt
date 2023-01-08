@@ -1,0 +1,114 @@
+# corrections for Expt subscript TBS (MANUAL ONLY) in file CustomViewer (LabScoresTestServer8)
+
+#    Purpose: transformations added manually to Trainingserver where there were still bugs, this should repoair
+#    dependencies: developer only subscript for expt 6328
+#    history; PCS 230106  
+# 
+Allow User Abort [ Off ]
+Set Error Capture [ On ]
+# 
+# 
+Go to Layout [ “Transformations DEV” (Transformations) ; Animation: None ]
+Set Field [ Transformations_JoinMediaForeign::StatusMarker ; 1 ] 
+Go to Record/Request/Page [ First ]
+Loop
+	Set Variable [ $StartDateList ; Value: List ( JoinMediaForeign_Transformation::DateStart ) ] 
+	Set Variable [ $DateCounter ; Value: ValueCount ( $StartDateList ) ] 
+	Set Variable [ $D ; Value: 2    // always use startdate from next step ] 
+	Go to Related Record [ Show only related records ; From table: “JoinMediaForeign_Transformation” ; Using layout: “JoinMediaForeign  DEV” (JoinMediaForeign_CS) ] 
+	If [ Get ( LastError ) = 0 and Get ( FoundCount ) > 0 ] 
+		Sort Records [ Restore ; With dialog: Off ] 
+		Go to Record/Request/Page [ First ]
+		Set Variable [ $boxID ; Value: JoinMediaForeign_CS::_kf_StorageBoxID ] 
+		Loop
+			Set Field [ JoinMediaForeign_CS::StatusMarker ; 1 ] 
+			Set Field [ JoinMediaForeign_CS::MediaChangeMarker ; 3 ] 
+			Set Field [ JoinMediaForeign_CS::DateTransfer ; GetValue ( $StartDateList ; $D ) ] 
+			Set Field [ JoinMediaForeign_CS::_kf_StorageBoxID ; $boxID ] 
+			If [  IsEmpty ( JoinMediaForeign_CS::_kf_MediaID )  and not IsEmpty ( JoinMediaForeign_CS::MediaClass ) ] 
+				Perform Script [ Specified: From list ; “find or duplicate current MEDIA by [name] (ID in result)” from file: “ProductionViewer” ; Parameter: JoinMediaForeign_CS::MediaClass ]
+				Set Field [ JoinMediaForeign_CS::_kf_MediaID ; Get ( ScriptResult ) ] 
+				Set Variable [ $class ; Value: JoinMediaForeign_CS::MediaClass ] 
+			End If
+			Set Variable [ $D ; Value: $D + 1 ] 
+			Go to Record/Request/Page [ Next ; Exit after last: On ]
+		End Loop
+		# 
+		Set Variable [ $MediaID ; Value: JoinMediaForeign_CS::_kf_MediaID ] 
+		# 
+		# 
+		Commit Records/Requests [ With dialog: Off ] 
+		If [ JoinMediaForeign_CS::StepNr = 4 ] 
+			If [  IsEmpty ( JoinMediaForeign_CS::_kf_MediaID )  and not IsEmpty ( JoinMediaForeign_CS::MediaClass ) ] 
+				Perform Script [ Specified: From list ; “find or duplicate current MEDIA by [name] (ID in result)” from file: “ProductionViewer” ; Parameter: JoinMediaForeign_CS::MediaClass ]
+				Set Variable [ $MediaID ; Value: Get ( ScriptResult ) ] 
+			Else If [ IsEmpty ( JoinMediaForeign_CS::MediaClass ) ] 
+				Perform Script [ Specified: From list ; “find or duplicate current MEDIA by [name] (ID in result)” from file: “ProductionViewer” ; Parameter: $class ]
+				Set Variable [ $MediaID ; Value: Get ( ScriptResult ) ] 
+			Else If [ not IsEmpty ( JoinMediaForeign_CS::_kf_MediaID ) ] 
+				Set Variable [ $MediaID ; Value: JoinMediaForeign_CS::_kf_MediaID ] 
+			End If
+			Set Variable [ $JMFID ; Value: JoinMediaForeign_CS::__kp_JoinMediaForeignID ] 
+			Set Variable [ $class ; Value: JoinMediaForeign_CS::MediaClass ] 
+			Set Field [ JoinMediaForeign_CS::Notes ; "move all to media " & $class ] 
+			Set Field [ JoinMediaForeign_CS::DateTransfer ; JoinMediaForeign_CS::DateNextMediaChange ] 
+			Commit Records/Requests [ With dialog: Off ] 
+			Set Variable [ $DateTransfer ; Value: GetAsDate ( JoinMediaForeign_CS::DateTransfer ) ] 
+			Duplicate Record/Request
+			Set Field [ JoinMediaForeign_CS::_kf_JMFparentID ; $JMFID ] 
+			Set Field [ JoinMediaForeign_CS::_kf_MediaID ; $MediaID ] 
+			Set Field [ JoinMediaForeign_CS::StepNr ; 5 ] 
+			Set Field [ JoinMediaForeign_CS::ParentStepNr ; 4 ] 
+			Set Field [ JoinMediaForeign_CS::StatusMarker ; 1 ] 
+			Set Field [ JoinMediaForeign_CS::MediaChangeMarker ; 3 ] 
+			Set Field [ JoinMediaForeign_CS::DateStart ; $DateTransfer ] 
+			Set Field [ JoinMediaForeign_CS::DateNextMediaChange ; $DateTransfer + 14 ] 
+			Set Field [ JoinMediaForeign_CS::DateTransfer ; $DateTransfer + 14 ] 
+			Set Field [ JoinMediaForeign_CS::Notes ; "" ] 
+			Commit Records/Requests [ With dialog: Off ] 
+		End If
+		If [ JoinMediaForeign_CS::StepNr = 5 ] 
+			If [  IsEmpty ( JoinMediaForeign_CS::_kf_MediaID )  and not IsEmpty ( JoinMediaForeign_CS::MediaClass ) ] 
+				Perform Script [ Specified: From list ; “find or duplicate current MEDIA by [name] (ID in result)” from file: “ProductionViewer” ; Parameter: JoinMediaForeign_CS::MediaClass ]
+				Set Variable [ $MediaID ; Value: Get ( ScriptResult ) ] 
+			Else If [ IsEmpty ( JoinMediaForeign_CS::MediaClass ) ] 
+				Perform Script [ Specified: From list ; “find or duplicate current MEDIA by [name] (ID in result)” from file: “ProductionViewer” ; Parameter: $class ]
+				Set Variable [ $MediaID ; Value: Get ( ScriptResult ) ] 
+			Else If [ not IsEmpty ( JoinMediaForeign_CS::_kf_MediaID ) ] 
+				Set Variable [ $MediaID ; Value: JoinMediaForeign_CS::_kf_MediaID ] 
+			End If
+			Set Variable [ $JMFID ; Value: JoinMediaForeign_CS::__kp_JoinMediaForeignID ] 
+			Set Variable [ $DateTransfer ; Value: GetAsDate ( JoinMediaForeign_CS::DateTransfer ) ] 
+			Duplicate Record/Request
+			Set Field [ JoinMediaForeign_CS::_kf_JMFparentID ; $JMFID ] 
+			Set Field [ JoinMediaForeign_CS::_kf_MediaID ; $MediaID ] 
+			Set Field [ JoinMediaForeign_CS::StepNr ; 6 ] 
+			Set Field [ JoinMediaForeign_CS::ParentStepNr ; 5 ] 
+			Set Field [ JoinMediaForeign_CS::StatusMarker ; 1 ] 
+			Set Field [ JoinMediaForeign_CS::MediaChangeMarker ; 1 ] 
+			# NOTE the actual date here, may change on final implementation on TrainingServer
+			Set Field [ JoinMediaForeign_CS::DateStart ; Date ( 1 ; 6 ; 2023 ) ] 
+			Set Field [ JoinMediaForeign_CS::DateNextMediaChange ; Date ( 1 ; 6 ; 2023 ) + 14 ] 
+			Commit Records/Requests [ With dialog: Off ] 
+		End If
+		Set Variable [ $JMFIDforPlates ; Value: JoinMediaForeign_CS::__kp_JoinMediaForeignID ] 
+		Go to Layout [ “Transformations form view” (Transformations) ; Animation: None ]
+		Go to Related Record [ Show only related records ; From table: “storage_detail_portal_Transformations” ; Using layout: “StorageDetail_SHADOW” (storage_detail) ] 
+		If [ Get ( LastError ) = 0 and Get ( FoundCount ) > 0 ] 
+			Go to Record/Request/Page [ First ]
+			Loop
+				Set Field [ storage_detail::foreign2_KeyID ; $JMFIDforPlates ] 
+				Set Field [ storage_detail::Media_id ; $MediaID ] 
+				Set Field [ storage_detail::ProcessMarker ; 1 ] 
+				Set Field [ storage_detail::Status ; "development" ] 
+				Go to Record/Request/Page [ Next ; Exit after last: On ]
+			End Loop
+		End If
+	End If
+	Go to Layout [ “Transformations form view” (Transformations) ; Animation: None ]
+	Set Field [ Transformations::Status ; "development" ] 
+	Go to Record/Request/Page [ Next ; Exit after last: On ]
+End Loop
+Commit Records/Requests [ With dialog: Off ] 
+# 
+Exit Script [ Text Result:    ] 
